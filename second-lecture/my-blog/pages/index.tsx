@@ -9,6 +9,7 @@ import Link from "next/link"
 import { HomePageProps } from "./interfaces"
 
 const HomPage: FC<HomePageProps> = ({ posts }) => {
+  console.log("posts", posts)
   return (
     <div>
       <h1>My Blog</h1>
@@ -30,20 +31,24 @@ const HomPage: FC<HomePageProps> = ({ posts }) => {
 }
 
 export const getStaticProps: GetStaticProps<HomePageProps> = async () => {
-  const postsDirectory = path.join(process.cwd(), "__posts")
+  const postsDirectory = path.join(process.cwd(), "_posts")
+  console.log(postsDirectory)
   const filenames = fs.readdirSync(postsDirectory)
-  const posts = filenames?.map((filename) => {
-    const filePath = path.join(postsDirectory, filename)
-    const fileContents = fs.readFileSync(filePath, "utf8")
-    const { data } = matter(fileContents)
+  const posts = filenames
+    ?.map((filename) => {
+      const filePath = path.join(postsDirectory, filename)
+      const fileContents = fs.readFileSync(filePath, "utf8")
+      const { data } = matter(fileContents)
 
-    return {
-      id: data.id as string,
-      title: data.title as string,
-      date: data.date as string,
-      description: data.description as string,
-    }
-  })
+      return {
+        id: data.id as string,
+        title: data.title as string,
+        date: data.date as string,
+        description: data.description as string,
+      }
+    })
+    .filter((post) => post !== undefined)
+  console.log(posts)
 
   return {
     props: {

@@ -1,12 +1,12 @@
 import * as react from "react"
 import { FC, useEffect } from "react"
 import fs from "fs"
-import path from "path"
+import path, { join } from "path"
 import matter from "gray-matter"
 import { GetStaticProps, GetStaticPaths } from "next"
 import { remark } from "remark"
 import hljs from "highlight.js"
-import remarkHtml from "remark-html"
+import html from "remark-html"
 
 import "highlight.js/styles/github.css"
 
@@ -19,6 +19,7 @@ const DetailPage: FC<DetailPageProps> = ({ post }) => {
   return (
     <div>
       <h1>{post.title}</h1>
+      <p>{post.id}</p>
       <p>{post.date}</p>
       <p>{post.description}</p>
     </div>
@@ -26,12 +27,13 @@ const DetailPage: FC<DetailPageProps> = ({ post }) => {
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const postsDirectory = path.join(process.cwd(), "__posts")
+  const postsDirectory = join(process.cwd(), "_posts")
   const filenames = fs.readdirSync(postsDirectory)
-  const paths = filenames.map((filename) => ({
-    params: { id: path.basename(filename, ".md") },
-  }))
-
+  const paths = filenames
+    .map((filename) => ({
+      params: { id: path.basename(filename, ".md") },
+    }))
+    .filter((post) => post !== undefined)
   return {
     paths,
     fallback: false,
@@ -42,11 +44,11 @@ export const getStaticProps: GetStaticProps<DetailPageProps> = async ({
   params,
 }) => {
   const { id } = params
-  const filePath = path.join(process.cwd(), "__posts", `${id}.md`)
+  const filePath = path.join(process.cwd(), "_posts", `${id}.md`)
   const fileContents = fs.readFileSync(filePath, "utf8")
   const { data, content } = matter(fileContents)
-  const processedContent = await remark()?.use(remarkHtml)?.process(content)
-  const contentHtml = processedContent?.toString()
+  const processedContent = await remark().use(remarkHtml).process(content)
+  const contentHtml = "processedContent?.toString()"
 
   return {
     props: {
@@ -59,4 +61,9 @@ export const getStaticProps: GetStaticProps<DetailPageProps> = async ({
       },
     },
   }
+}
+
+export default async function markdownToHtml(markdown: string) {
+  const result = await remark().use(html).process(markdown)
+  return result.toString()
 }
